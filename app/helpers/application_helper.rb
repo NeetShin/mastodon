@@ -1,6 +1,12 @@
 # frozen_string_literal: true
 
 module ApplicationHelper
+  DANGEROUS_SCOPES = %w(
+    read
+    write
+    follow
+  ).freeze
+
   def active_nav_class(path)
     current_page?(path) ? 'active' : ''
   end
@@ -21,9 +27,12 @@ module ApplicationHelper
     Setting.open_deletion
   end
 
-  def add_rtl_body_class(other_classes)
-    other_classes = "#{other_classes} rtl" if [:ar, :fa, :he].include?(I18n.locale)
-    other_classes
+  def locale_direction
+    if [:ar, :fa, :he].include?(I18n.locale)
+      'rtl'
+    else
+      'ltr'
+    end
   end
 
   def favicon_path
@@ -33,6 +42,10 @@ module ApplicationHelper
 
   def title
     Rails.env.production? ? site_title : "#{site_title} (Dev)"
+  end
+
+  def class_for_scope(scope)
+    'scope-danger' if DANGEROUS_SCOPES.include?(scope.to_s)
   end
 
   def can?(action, record)
@@ -54,5 +67,18 @@ module ApplicationHelper
 
   def opengraph(property, content)
     tag(:meta, content: content, property: property)
+  end
+
+  def react_component(name, props = {})
+    content_tag(:div, nil, data: { component: name.to_s.camelcase, props: Oj.dump(props) })
+  end
+
+  def body_classes
+    output = (@body_classes || '').split(' ')
+    output << "theme-#{current_theme.parameterize}"
+    output << 'system-font' if current_account&.user&.setting_system_font_ui
+    output << (current_account&.user&.setting_reduce_motion ? 'reduce-motion' : 'no-reduce-motion')
+    output << 'rtl' if locale_direction == 'rtl'
+    output.reject(&:blank?).join(' ')
   end
 end

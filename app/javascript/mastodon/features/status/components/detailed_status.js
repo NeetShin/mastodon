@@ -22,10 +22,11 @@ export default class DetailedStatus extends ImmutablePureComponent {
     status: ImmutablePropTypes.map.isRequired,
     onOpenMedia: PropTypes.func.isRequired,
     onOpenVideo: PropTypes.func.isRequired,
+    onToggleHidden: PropTypes.func.isRequired,
   };
 
   handleAccountClick = (e) => {
-    if (e.button === 0) {
+    if (e.button === 0 && !(e.ctrlKey || e.metaKey)) {
       e.preventDefault();
       this.context.router.history.push(`/accounts/${this.props.status.getIn(['account', 'id'])}`);
     }
@@ -33,8 +34,12 @@ export default class DetailedStatus extends ImmutablePureComponent {
     e.stopPropagation();
   }
 
-  handleOpenVideo = startTime => {
-    this.props.onOpenVideo(this.props.status.getIn(['media_attachments', 0]), startTime);
+  handleOpenVideo = (media, startTime) => {
+    this.props.onOpenVideo(media, startTime);
+  }
+
+  handleExpandedToggle = () => {
+    this.props.onToggleHidden(this.props.status);
   }
 
   render () {
@@ -55,8 +60,10 @@ export default class DetailedStatus extends ImmutablePureComponent {
           <Video
             preview={video.get('preview_url')}
             src={video.get('url')}
+            alt={video.get('description')}
             width={300}
             height={150}
+            inline
             onOpenVideo={this.handleOpenVideo}
             sensitive={status.get('sensitive')}
           />
@@ -104,7 +111,7 @@ export default class DetailedStatus extends ImmutablePureComponent {
           <DisplayName account={status.get('account')} />
         </a>
 
-        <StatusContent status={status} />
+        <StatusContent status={status} expanded={!status.get('hidden')} onExpandedToggle={this.handleExpandedToggle} />
 
         {media}
 

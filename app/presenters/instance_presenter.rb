@@ -6,6 +6,7 @@ class InstancePresenter
     :site_contact_email,
     :open_registrations,
     :site_title,
+    :site_short_description,
     :site_description,
     :site_extended_description,
     :site_terms,
@@ -13,7 +14,7 @@ class InstancePresenter
   )
 
   def contact_account
-    Account.find_local(Setting.site_contact_username)
+    Account.find_local(Setting.site_contact_username.gsub(/\A@/, ''))
   end
 
   def user_count
@@ -38,5 +39,9 @@ class InstancePresenter
 
   def thumbnail
     @thumbnail ||= Rails.cache.fetch('site_uploads/thumbnail') { SiteUpload.find_by(var: 'thumbnail') }
+  end
+
+  def hero
+    @hero ||= Rails.cache.fetch('site_uploads/hero') { SiteUpload.find_by(var: 'hero') }
   end
 end
